@@ -1,7 +1,6 @@
 {
-  "name": "web",
+  "name": "ece-complaints",
   "version": "0.1.0",
-  "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -29,3 +28,4 @@
     "typescript": "^5"
   }
 }
+
