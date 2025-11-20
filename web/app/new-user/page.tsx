@@ -1,116 +1,152 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '../../../utils/supabase/client';
+import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 export default function NewUserPage() {
-  const supabase = createClient();
   const router = useRouter();
-  const [sessionChecked, setSessionChecked] = useState(false);
-  const [session, setSession] = useState<any>(null);
-  const [fullName, setFullName] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
 
-  // ✅ Check Supabase session on page load
+  const [fullName, setFullName] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const [message, setMessage] = useState("");
+
+  // ✅ Check if session or token exists, otherwise redirect
   useEffect(() => {
-    const checkSession = async () => {
+    const checkAccess = async () => {
+      // 1️⃣ Check if URL has token (Supabase magic link adds these)
+      const hash = window.location.hash;
+      const hasToken = hash.includes("access_token") || hash.includes("refresh_token");
+
+      // 2️⃣ Try to get the current session
       const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        // No verified user session — redirect to email page
-        router.push('/login');
-      } else {
-        setSession(data.session);
+      const session = data?.session;
+
+      if (!hasToken && !session) {
+        // ❌ No token or session → block access
+        router.replace("/login");
       }
-      setSessionChecked(true);
     };
-    checkSession();
-  }, [supabase, router]);
+    checkAccess();
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
+
+    if (password !== confirm) {
+      setStatus("error");
+      setMessage("Passwords do not match.");
       return;
     }
 
-    const { user } = session;
+    setStatus("saving");
+    setMessage("");
 
-    const { error } = await supabase.from('profiles').insert([
-      {
-        id: user.id,
-        full_name: fullName,
-        password: password,
-      },
-    ]);
+    try {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData?.user) {
+        throw new Error("User not found. Please use the verification link again.");
+      }
 
-    if (error) {
-      setError('Error saving profile');
-      console.error(error);
-      return;
+      const { error: insertError } = await supabase
+        .from("profiles")
+        .insert([
+          {
+            id: userData.user.id,
+            full_name: fullName,
+            password: password,
+            email: userData.user.email, // auto from Supabase user
+          },
+        ]);
+
+      if (insertError) throw insertError;
+
+      setStatus("success");
+      setMessage("Profile created successfully!");
+      setTimeout(() => router.push("/login"), 1500);
+    } catch (err: any) {
+      console.error(err);
+      setStatus("error");
+      setMessage(err.message || "Something went wrong.");
     }
-
-    alert('Profile created successfully! You can now log in.');
-    router.push('/login');
   };
 
-  if (!sessionChecked) {
-    return <div className="flex justify-center items-center h-screen">Checking session...</div>;
-  }
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-2xl shadow-md w-96 space-y-4"
-      >
-        <h2 className="text-2xl font-semibold text-center mb-4">Set up your profile</h2>
+    <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="bg-white p-8 rounded-2xl shadow-md w-full max-w-sm">
+        <h1 className="text-2xl font-bold text-center text-blue-600 mb-6">
+          Complete Your Registration
+        </h1>
 
-        <div>
-          <label className="block text-sm font-medium">Full Name</label>
-          <input
-            type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
-            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Full Name
+            </label>
+            <input
+              type="text"
+              required
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Your full name"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium">Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter a strong password"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium">Confirm Password</label>
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            required
-            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              required
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              placeholder="Re-enter your password"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
 
-        {error && <p className="text-red-500 text-sm">{error}</p>}
+          <button
+            type="submit"
+            disabled={status === "saving"}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+          >
+            {status === "saving" ? "Saving..." : "Create Account"}
+          </button>
+        </form>
 
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
-        >
-          Save
-        </button>
-      </form>
+        {message && (
+          <p
+            className={`text-center mt-4 text-sm ${
+              status === "error" ? "text-red-500" : "text-green-600"
+            }`}
+          >
+            {message}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
-

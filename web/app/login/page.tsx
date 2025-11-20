@@ -24,12 +24,19 @@ export default function LoginPage() {
       .single();
 
     if (error || !data) {
-      setError('Invalid credentials. Please try again.');
+      setError('Invalid full name or password. Please try again.');
       return;
     }
 
-    // Save user in localStorage (temporary client session)
-    localStorage.setItem('user', JSON.stringify(data));
+    // Save user in localStorage with email included
+    localStorage.setItem(
+      'user',
+      JSON.stringify({
+        id: data.id,
+        full_name: data.full_name,
+        email: data.email,  // <-- ensure email is included
+      })
+    );
 
     // ✅ Admin check
     const adminId = process.env.NEXT_PUBLIC_ADMIN_ID!;
@@ -43,51 +50,89 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <form
-        onSubmit={handleLogin}
-        className="bg-white p-8 rounded-2xl shadow-md w-96 space-y-4"
-      >
-        <h2 className="text-2xl font-semibold text-center mb-4">Login</h2>
-
-        <div>
-          <label className="block text-sm font-medium">Full Name</label>
-          <input
-            type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
-            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium">Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition"
+    <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
+      <div className="w-full max-w-md">
+        {/* Login Card */}
+        <form
+          onSubmit={handleLogin}
+          className="bg-white p-8 sm:p-10 rounded-3xl shadow-2xl border border-slate-200 space-y-6"
         >
-          Login
-        </button>
+            <div className="text-center">
+                <h1 className="text-4xl font-extrabold text-indigo-700 mb-2">
+                    Complaint Portal
+                </h1>
+                <h2 className="text-xl font-semibold text-slate-700">
+                    Sign In to Your Account
+                </h2>
+            </div>
+            
+            {/* Input Group: Full Name */}
+            <div>
+                <label 
+                    htmlFor="fullName" 
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                >
+                    Full Name
+                </label>
+                <input
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    // --- FIX APPLIED HERE: Added text-slate-800 for dark input text color ---
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm placeholder:text-gray-400 text-slate-800"
+                    placeholder="e.g., Jane Doe"
+                />
+            </div>
 
-        <p className="text-sm text-center">
-          New User?{' '}
-          <a href="/email" className="text-blue-600 hover:underline">
-            Sign Up
-          </a>
-        </p>
-      </form>
+            {/* Input Group: Password */}
+            <div>
+                <label 
+                    htmlFor="password" 
+                    className="block text-sm font-medium text-slate-700 mb-1"
+                >
+                    Password
+                </label>
+                <input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    // --- FIX APPLIED HERE: Added text-slate-800 for dark input text color ---
+                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm placeholder:text-gray-400 text-slate-800"
+                    placeholder="Enter your password"
+                />
+            </div>
+
+            {/* Error Message */}
+            {error && (
+                <p className="bg-red-100 text-red-700 p-3 rounded-xl text-sm font-medium text-center">
+                    {error}
+                </p>
+            )}
+
+            {/* Submit Button */}
+            <button
+                type="submit"
+                className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition duration-300 shadow-md shadow-indigo-300/50 transform hover:scale-[1.005]"
+            >
+                Secure Login
+            </button>
+
+            {/* Signup Link */}
+            <p className="text-sm text-center text-slate-600 pt-2">
+                New User?{' '}
+                <a 
+                    href="/email" 
+                    className="text-indigo-600 font-semibold hover:text-indigo-700 hover:underline transition"
+                >
+                    Create Account
+                </a>
+            </p>
+        </form>
+      </div>
     </div>
   );
 }

@@ -19,7 +19,7 @@ export default function AuthPage() {
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: 'http://localhost:3000/', // after verification
+        emailRedirectTo: 'http://10.81.46.48:3000/new-user', // after verification
       },
     })
 

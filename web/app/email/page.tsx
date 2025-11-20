@@ -29,13 +29,14 @@ export default function EmailPage() {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: {
-          emailRedirectTo: "http://localhost:3000/new-user",
+        options: {  
+          emailRedirectTo: "http://10.81.46.48:3000/new-user",
         },
       });
 
       if (error) throw error;
-
+      localStorage.setItem("allowNewUserAccess", "true");
+      // router.push("/new-user");
       setStatus("success");
       setMessage("Magic link sent! Check your inbox to continue.");
     } catch (err: any) {
