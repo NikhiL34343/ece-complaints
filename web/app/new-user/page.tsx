@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "../../../utils/supabase/client"; // <-- IMPORTANT
+import { createClient } from "@/utils/supabase/client"; // <-- IMPORTANT
 
 const supabase = createClient();
 

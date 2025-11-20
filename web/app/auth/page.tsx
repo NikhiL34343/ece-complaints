@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "../../../utils/supabase/client"; // or keep your lib import
+import { createClient } from "@/utils/supabase/client"; // or keep your lib import
 
 const supabase = createClient();
 
