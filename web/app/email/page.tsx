@@ -1,50 +1,40 @@
 "use client";
 
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "../../../utils/supabase/client";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+const supabase = createClient();
 
 export default function EmailPage() {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle"|"sending"|"success"|"error">("idle");
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    // validate domain
     if (!email.endsWith("@ece.iitr.ac.in")) {
       setStatus("error");
       setMessage("Only @ece.iitr.ac.in emails are allowed.");
       return;
     }
-
-    setStatus("sending");
-    setMessage("");
-
+    setStatus("sending"); setMessage("");
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email,
-        options: {  
-          emailRedirectTo: "http://10.81.46.48:3000/new-user",
+        options: {
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/new-user`,
         },
       });
-
       if (error) throw error;
       localStorage.setItem("allowNewUserAccess", "true");
-      // router.push("/new-user");
       setStatus("success");
-      setMessage("Magic link sent! Check your inbox to continue.");
+      setMessage("Magic link sent! Check your inbox.");
     } catch (err: any) {
-      console.error(err);
       setStatus("error");
       setMessage(err.message || "Something went wrong.");
     }
   };
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-100">
@@ -64,7 +54,8 @@ export default function EmailPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@ece.iitr.ac.in"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              // 👈 **STYLE CHANGE HERE: Added text-gray-900 for dark/black typed text.**
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900" 
             />
           </div>
 
@@ -90,4 +81,3 @@ export default function EmailPage() {
     </div>
   );
 }
-

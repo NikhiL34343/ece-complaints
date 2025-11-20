@@ -116,7 +116,7 @@ export default function HomePage() {
             {/* Header */}
             <header className="flex justify-between items-center py-4 px-6 bg-white shadow-md rounded-xl mb-8">
                 <h1 className="text-3xl font-extrabold text-indigo-700">
-                    Hello, {user.full_name.split(' ')[0]}!
+                    Hello, {user.email?.split('@')?.[0] ?? "User"}!
                 </h1>
                 <button
                     onClick={handleLogout}

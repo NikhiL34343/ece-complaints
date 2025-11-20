@@ -1,138 +1,85 @@
-'use client';
+// pages/login/page.tsx  (or app/login/page.tsx depending on your structure)
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { createClient } from '../../../utils/supabase/client';
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "../../../utils/supabase/client";
 
 export default function LoginPage() {
   const supabase = createClient();
   const router = useRouter();
-  const [fullName, setFullName] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
-    // Query Supabase for matching user
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('full_name', fullName)
-      .eq('password', password)
+    const { data, error: dbError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("email", email)
+      .eq("password", password)
       .single();
 
-    if (error || !data) {
-      setError('Invalid full name or password. Please try again.');
+    if (dbError || !data) {
+      setError("Invalid email or password. Please try again.");
       return;
     }
 
-    // Save user in localStorage with email included
+    // Save only id + email in localStorage
     localStorage.setItem(
-      'user',
+      "user",
       JSON.stringify({
         id: data.id,
-        full_name: data.full_name,
-        email: data.email,  // <-- ensure email is included
+        email: data.email,
       })
     );
 
-    // ✅ Admin check
+    // Admin check (id in env)
     const adminId = process.env.NEXT_PUBLIC_ADMIN_ID!;
     if (data.id === adminId) {
-      router.push('/admin');
-      return; // stop further execution
+      router.push("/admin");
+      return;
     }
 
-    // Redirect normal user to homepage
-    router.push('/');
+    router.push("/");
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
       <div className="w-full max-w-md">
-        {/* Login Card */}
-        <form
-          onSubmit={handleLogin}
-          className="bg-white p-8 sm:p-10 rounded-3xl shadow-2xl border border-slate-200 space-y-6"
-        >
-            <div className="text-center">
-                <h1 className="text-4xl font-extrabold text-indigo-700 mb-2">
-                    Complaint Portal
-                </h1>
-                <h2 className="text-xl font-semibold text-slate-700">
-                    Sign In to Your Account
-                </h2>
-            </div>
-            
-            {/* Input Group: Full Name */}
-            <div>
-                <label 
-                    htmlFor="fullName" 
-                    className="block text-sm font-medium text-slate-700 mb-1"
-                >
-                    Full Name
-                </label>
-                <input
-                    id="fullName"
-                    type="text"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    required
-                    // --- FIX APPLIED HERE: Added text-slate-800 for dark input text color ---
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm placeholder:text-gray-400 text-slate-800"
-                    placeholder="e.g., Jane Doe"
-                />
-            </div>
+        <form onSubmit={handleLogin} className="bg-white p-8 rounded-3xl shadow-2xl border border-slate-200 space-y-6">
+          <div className="text-center">
+            <h1 className="text-4xl font-extrabold text-indigo-700 mb-2">Complaint Portal</h1>
+            <h2 className="text-xl font-semibold text-slate-700">Sign In to Your Account</h2>
+          </div>
 
-            {/* Input Group: Password */}
-            <div>
-                <label 
-                    htmlFor="password" 
-                    className="block text-sm font-medium text-slate-700 mb-1"
-                >
-                    Password
-                </label>
-                <input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    // --- FIX APPLIED HERE: Added text-slate-800 for dark input text color ---
-                    className="w-full p-3 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 transition shadow-sm placeholder:text-gray-400 text-slate-800"
-                    placeholder="Enter your password"
-                />
-            </div>
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">Email</label>
+            <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
+              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400 text-slate-800"
+              placeholder="you@ece.iitr.ac.in" />
+          </div>
 
-            {/* Error Message */}
-            {error && (
-                <p className="bg-red-100 text-red-700 p-3 rounded-xl text-sm font-medium text-center">
-                    {error}
-                </p>
-            )}
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+            <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required
+              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400 text-slate-800"
+              placeholder="Enter your password" />
+          </div>
 
-            {/* Submit Button */}
-            <button
-                type="submit"
-                className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition duration-300 shadow-md shadow-indigo-300/50 transform hover:scale-[1.005]"
-            >
-                Secure Login
-            </button>
+          {error && <p className="bg-red-100 text-red-700 p-3 rounded-xl text-sm font-medium text-center">{error}</p>}
 
-            {/* Signup Link */}
-            <p className="text-sm text-center text-slate-600 pt-2">
-                New User?{' '}
-                <a 
-                    href="/email" 
-                    className="text-indigo-600 font-semibold hover:text-indigo-700 hover:underline transition"
-                >
-                    Create Account
-                </a>
-            </p>
+          <button type="submit" className="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition">Secure Login</button>
+
+          <p className="text-sm text-center text-slate-600 pt-2">
+            New User? <a href="/email" className="text-indigo-600 font-semibold hover:text-indigo-700 hover:underline">Create Account</a>
+          </p>
         </form>
       </div>
     </div>
   );
 }
+
