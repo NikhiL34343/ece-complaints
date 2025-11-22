@@ -138,7 +138,7 @@ export default function HomePage() {
                     
                     <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                         <textarea
-                            placeholder="Briefly describe your complaint (e.g., 'Broken light near main gate')..."
+                            placeholder="Briefly describe your complaint (e.g., 'Clean the lift in South Block')..."
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             required
