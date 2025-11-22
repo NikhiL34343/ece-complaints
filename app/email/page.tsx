@@ -28,7 +28,7 @@ export default function EmailPage() {
       if (error) throw error;
       localStorage.setItem("allowNewUserAccess", "true");
       setStatus("success");
-      setMessage("Magic link sent! Check your inbox.");
+      setMessage("Verification link sent! Check your inbox.");
     } catch (err: any) {
       setStatus("error");
       setMessage(err.message || "Something went wrong.");
